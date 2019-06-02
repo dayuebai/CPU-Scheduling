@@ -6,7 +6,6 @@
  */
 package com.jimweller.cpuscheduler;
 
-import java.lang.reflect.Member;
 import java.util.*;
 
 public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
@@ -55,27 +54,39 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         if (alloc_algorithm.equals("FIRST")) {
             while (i < MEMORY_SIZE) {
                 if (Long.signum(memory[i][0]) == 0 && Long.signum(memory[i][1] - m) >= 0) { // Bin available
-                    int next = (int)(i + m);
-                    memory[next][0] = 0;
-                    memory[next][1] = memory[i][1] - m;
-                    memory[next][2] = m;
-                    memory[i][0] = 1;
-                    memory[i][1] = m;
-                    pidMap.put(pid, i);
-                    System.out.println("memory[i][0]: " + memory[i][0] + ", memory[i][1]: " + memory[i][1] + ", next: " + next + ", memory[next][1]: " + memory[next][1] + ", memory[next][2]: " + memory[next][2]);
-                    System.out.println("pidMap: " + "(" + pid + ", " + i + ")");
+                    allocMemory(i, m, pid);
                     break;
                 } else {
                     i = (int)(i + memory[i][1]);
                 }
             }
-        } else if (alloc_algorithm.equals("BEST")) {
-            // TODO: Extra Credit (Best-fit algorithm)
-        }
 
-        if (i >= MEMORY_SIZE) { // Not enough memory available to add the current process to the queue
-            p.setIgnore(true);
-            return;
+            if (i >= MEMORY_SIZE) { // Not enough memory available to add the current process to the queue
+                p.setIgnore(true);
+                return;
+            }
+
+        } else if (alloc_algorithm.equals("BEST")) {
+            int bestFitIndex = -1;
+            long minRemainingCap = MEMORY_SIZE + 1; // No bin has remaining capacity larger than size of memory
+
+            while (i < MEMORY_SIZE) {
+                long remainCap = memory[i][1] - m;
+                if (Long.signum(memory[i][0]) == 0 && Long.signum(remainCap) >= 0) {
+                    if (remainCap < minRemainingCap) {
+                        minRemainingCap = remainCap;
+                        bestFitIndex = i;
+                    }
+                }
+                i = (int)(i + memory[i][1]);
+            }
+
+            if (bestFitIndex == -1) {
+                p.setIgnore(true);
+                return;
+            } else {
+                allocMemory(bestFitIndex, m, pid);
+            }
         }
 
         jobs.add(p);
@@ -152,5 +163,17 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         // Modify class to support memory management
         alloc_algorithm = v;
         System.out.println("Allocation Algorithm: " + alloc_algorithm);
+    }
+
+    private void allocMemory(int binIndex, long blockSize, long pid) {
+        int next = (int)(binIndex + blockSize);
+        memory[next][0] = 0;
+        memory[next][1] = memory[binIndex][1] - blockSize;
+        memory[next][2] = blockSize;
+        memory[binIndex][0] = 1;
+        memory[binIndex][1] = blockSize;
+        pidMap.put(pid, binIndex);
+        System.out.println("memory[i][0]: " + memory[binIndex][0] + ", memory[i][1]: " + memory[binIndex][1] + ", next: " + next + ", memory[next][1]: " + memory[next][1] + ", memory[next][2]: " + memory[next][2]);
+        System.out.println("pidMap: " + "(" + pid + ", " + binIndex + ")");
     }
 }
