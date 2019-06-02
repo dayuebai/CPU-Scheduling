@@ -6,7 +6,6 @@
  */
 package com.jimweller.cpuscheduler;
 
-import java.lang.reflect.Member;
 import java.util.*;
 
 public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
