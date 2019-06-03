@@ -67,29 +67,28 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
                 p.setIgnore(true);
                 return;
             }
+        } else if (alloc_algorithm.equals("BEST")) {
+            int bestFitIndex = -1;
+            long minRemainingCap = MEMORY_SIZE + 1; // No bin has remaining capacity larger than size of memory
+
+            while (i < MEMORY_SIZE) {
+                long remainCap = memory[i][1] - m;
+                if (Long.signum(memory[i][0]) == 0 && Long.signum(remainCap) >= 0) {
+                    if (Long.signum(remainCap - minRemainingCap) < 0) {
+                        minRemainingCap = remainCap;
+                        bestFitIndex = i;
+                    }
+                }
+                i = (int)(i + memory[i][1]);
+            }
+
+            if (bestFitIndex == -1) {
+                p.setIgnore(true);
+                return;
+            } else {
+                allocMemory(bestFitIndex, m, pid);
+            }
         }
-//        } else if (alloc_algorithm.equals("BEST")) {
-//            int bestFitIndex = -1;
-//            long minRemainingCap = MEMORY_SIZE + 1; // No bin has remaining capacity larger than size of memory
-//
-//            while (i < MEMORY_SIZE) {
-//                long remainCap = memory[i][1] - m;
-//                if (Long.signum(memory[i][0]) == 0 && Long.signum(remainCap) >= 0) {
-//                    if (Long.signum(remainCap - minRemainingCap) < 0) {
-//                        minRemainingCap = remainCap;
-//                        bestFitIndex = i;
-//                    }
-//                }
-//                i = (int)(i + memory[i][1]);
-//            }
-//
-//            if (bestFitIndex == -1) {
-//                p.setIgnore(true);
-//                return;
-//            } else {
-//                allocMemory(bestFitIndex, m, pid);
-//            }
-//        }
 
         jobs.add(p);
         Collections.sort(jobs, comparator);
