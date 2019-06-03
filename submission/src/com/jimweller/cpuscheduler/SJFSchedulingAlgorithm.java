@@ -40,7 +40,6 @@ public class SJFSchedulingAlgorithm extends BaseSchedulingAlgorithm implements O
     public void addJob(Process p){
         // Fill in this method
         /*------------------------------------------------------------*/
-//        System.out.println("Job queue add job pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
         jobs.add(p);
         Collections.sort(jobs, comparator);
         /*------------------------------------------------------------*/
@@ -50,7 +49,6 @@ public class SJFSchedulingAlgorithm extends BaseSchedulingAlgorithm implements O
     public boolean removeJob(Process p){
         // Fill in this method
         /*------------------------------------------------------------*/
-//        System.out.println("Job query remove jod pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
         if (p == activeJob)
             activeJob = null;
         return jobs.remove(p);
@@ -75,7 +73,6 @@ public class SJFSchedulingAlgorithm extends BaseSchedulingAlgorithm implements O
             shortest = jobs.get(0);
 
         activeJob = shortest;
-//        System.out.println("Next job to run: " + activeJob.getPID() + ", cpu burst time: " + activeJob.getBurstTime());
         return activeJob;
         /*------------------------------------------------------------*/
     }

@@ -51,18 +51,15 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         long m = p.getMemSize();
         long pid = p.getPID();
 
-//        System.out.println("Try adding process: " + p.getPID() + ", burst time: " + p.getBurstTime() + ", arrival time: " + p.getArrivalTime());
         if (alloc_algorithm.equals("FIRST")) {
             while (i < MEMORY_SIZE) {
                 if (Long.signum(memory[i][0]) == 0 && Long.signum(memory[i][1] - m) >= 0) { // Bin available
                     allocMemory(i, m, pid);
                     break;
                 } else {
-//                    System.out.println("memory[i][1]: " + memory[i][1] + ", i: " + i);
                     i = (int) (i + memory[i][1]);
                 }
             }
-
             if (i >= MEMORY_SIZE) { // Not enough memory available to add the current process to the queue
                 p.setIgnore(true);
                 return;
@@ -81,7 +78,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
                 }
                 i = (int)(i + memory[i][1]);
             }
-
             if (bestFitIndex == -1) {
                 p.setIgnore(true);
                 return;
@@ -96,7 +92,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
 
     /** Returns true if the job was present and was removed. */
     public boolean removeJob(Process p) {
-//        System.out.println("try removing job: " + p.getPID() + ", finish time: " + p.getFinishTime());
         if (p == activeJob)
             activeJob = null;
 
@@ -104,15 +99,12 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         /*------------------------------------------------------------*/
         long pid = p.getPID();
         if (pidMap.containsKey(pid)) {
-//            System.out.println("Before free process: " + pid + ", burst time: " + p.getInitBurstTime());
-//            printMemory(memory);
             int i = pidMap.get(pid);
             int r = (int)(i + memory[i][1]);
             int l = (int)(i - memory[i][2]);
 
             memory[i][0] = 0; // Free the bin by setting empty bit to 0
             pidMap.remove(pid);
-//            System.out.println("remove pid: " + pid + ", finish time: " + p.getFinishTime());
 
             // Implement free block coalescing
             if (l >= 0 && r < MEMORY_SIZE && Long.signum(memory[l][0]) == 0 && Long.signum(memory[r][0]) == 0) { // Two neighbors are both empty
@@ -140,8 +132,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
                 memory[r][1] = 0;
                 memory[r][2] = 0;
             }
-//            System.out.println("After free process: " + pid + ", burst time: " + p.getInitBurstTime());
-//            printMemory(memory);
         }
         /*------------------------------------------------------------*/
 
@@ -178,7 +168,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
     public void setMemoryManagment(String v) {
         // Modify class to support memory management
         alloc_algorithm = v;
-//        System.out.println("Allocation Algorithm: " + alloc_algorithm);
     }
 
     private void allocMemory(int binIndex, long blockSize, long pid) {
@@ -194,8 +183,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         memory[binIndex][0] = 1;
         memory[binIndex][1] = blockSize;
         pidMap.put(pid, binIndex);
-//        System.out.println("memory[i][0]: " + memory[binIndex][0] + ", memory[i][1]: " + memory[binIndex][1] + ", next: " + next + ", memory[next][1]: " + memory[next][1] + ", memory[next][2]: " + memory[next][2]);
-//        System.out.println("pidMap: " + "(" + pid + ", " + binIndex + ")");
     }
 
 //    private void printMemory(long[][] memory) { // For debugging

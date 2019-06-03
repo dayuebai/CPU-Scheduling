@@ -38,7 +38,6 @@ public class RoundRobinSchedulingAlgorithm extends BaseSchedulingAlgorithm {
     public void addJob(Process p) {
         // Fill in this method
         /*------------------------------------------------------------*/
-//        System.out.println("Job queue add job pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
         jobs.add(p);
         Collections.sort(jobs, comparator);
         /*------------------------------------------------------------*/
@@ -48,7 +47,6 @@ public class RoundRobinSchedulingAlgorithm extends BaseSchedulingAlgorithm {
     public boolean removeJob(Process p) {
         // Fill in this method
         /*------------------------------------------------------------*/
-//        System.out.println("Job query remove job pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
         if (p == activeJob) {
             lastJobIndex = jobs.indexOf(activeJob);
             activeJob = null;
@@ -106,7 +104,6 @@ public class RoundRobinSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         }
 
         activeJob = next;
-//        System.out.println("Next job to run: " + activeJob.getPID() + ", cpu burst time: " + activeJob.getBurstTime());
         return activeJob;
         /*------------------------------------------------------------*/
     }
