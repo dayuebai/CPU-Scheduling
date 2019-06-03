@@ -36,7 +36,7 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         // Initialize memory
         /*------------------------------------------------------------*/
         alloc_algorithm = "FIRST"; // By default, use first fit algorithm
-        memory = new long[MEMORY_SIZE + 1][3];
+        memory = new long[MEMORY_SIZE][3];
         memory[0][0] = 0; memory[0][1] = MEMORY_SIZE; memory[0][2] = 1; // Bin is empty if empty bit = 0, Size, Previous bin size
         pidMap = new HashMap<>();
         /*------------------------------------------------------------*/
@@ -51,13 +51,15 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         long m = p.getMemSize();
         long pid = p.getPID();
 
+//        System.out.println("Try adding process: " + p.getPID() + ", burst time: " + p.getBurstTime() + ", arrival time: " + p.getArrivalTime());
         if (alloc_algorithm.equals("FIRST")) {
             while (i < MEMORY_SIZE) {
                 if (Long.signum(memory[i][0]) == 0 && Long.signum(memory[i][1] - m) >= 0) { // Bin available
                     allocMemory(i, m, pid);
                     break;
                 } else {
-                    i = (int)(i + memory[i][1]);
+//                    System.out.println("memory[i][1]: " + memory[i][1] + ", i: " + i);
+                    i = (int) (i + memory[i][1]);
                 }
             }
 
@@ -65,7 +67,6 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
                 p.setIgnore(true);
                 return;
             }
-
         } else if (alloc_algorithm.equals("BEST")) {
             int bestFitIndex = -1;
             long minRemainingCap = MEMORY_SIZE + 1; // No bin has remaining capacity larger than size of memory
@@ -73,7 +74,7 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
             while (i < MEMORY_SIZE) {
                 long remainCap = memory[i][1] - m;
                 if (Long.signum(memory[i][0]) == 0 && Long.signum(remainCap) >= 0) {
-                    if (remainCap < minRemainingCap) {
+                    if (Long.signum(remainCap - minRemainingCap) < 0) {
                         minRemainingCap = remainCap;
                         bestFitIndex = i;
                     }
@@ -95,6 +96,7 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
 
     /** Returns true if the job was present and was removed. */
     public boolean removeJob(Process p) {
+//        System.out.println("try removing job: " + p.getPID() + ", finish time: " + p.getFinishTime());
         if (p == activeJob)
             activeJob = null;
 
@@ -102,30 +104,44 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
         /*------------------------------------------------------------*/
         long pid = p.getPID();
         if (pidMap.containsKey(pid)) {
+//            System.out.println("Before free process: " + pid + ", burst time: " + p.getInitBurstTime());
+//            printMemory(memory);
             int i = pidMap.get(pid);
             int r = (int)(i + memory[i][1]);
             int l = (int)(i - memory[i][2]);
 
             memory[i][0] = 0; // Free the bin by setting empty bit to 0
             pidMap.remove(pid);
+//            System.out.println("remove pid: " + pid + ", finish time: " + p.getFinishTime());
 
             // Implement free block coalescing
             if (l >= 0 && r < MEMORY_SIZE && Long.signum(memory[l][0]) == 0 && Long.signum(memory[r][0]) == 0) { // Two neighbors are both empty
                 memory[l][1] += (memory[i][1] + memory[r][1]);
+                int rightIndex = (int)(r + memory[r][1]);
+                if (rightIndex < MEMORY_SIZE)
+                    memory[rightIndex][2] = memory[l][1];
                 memory[i][1] = 0;
                 memory[i][2] = 0;
                 memory[r][1] = 0;
                 memory[r][2] = 0;
             } else if (l >= 0 && Long.signum(memory[l][0]) == 0) { // Left bin is empty
                 memory[l][1] += memory[i][1];
+                int rightIndex = (int)(i + memory[i][1]);
+                if (rightIndex < MEMORY_SIZE)
+                    memory[rightIndex][2] = memory[l][1];
                 memory[i][1] = 0;
                 memory[i][2] = 0;
             } else if (r < MEMORY_SIZE && Long.signum(memory[r][0]) == 0){ // Right bin is empty
                 memory[i][1] += memory[r][1];
+                int rightIndex = (int)(r + memory[r][1]);
+                if (rightIndex < MEMORY_SIZE)
+                    memory[rightIndex][2] = memory[i][1];
                 memory[r][0] = 0;
                 memory[r][1] = 0;
                 memory[r][2] = 0;
             }
+//            System.out.println("After free process: " + pid + ", burst time: " + p.getInitBurstTime());
+//            printMemory(memory);
         }
         /*------------------------------------------------------------*/
 
@@ -162,18 +178,30 @@ public class FCFSSchedulingAlgorithm extends BaseSchedulingAlgorithm {
     public void setMemoryManagment(String v) {
         // Modify class to support memory management
         alloc_algorithm = v;
-        System.out.println("Allocation Algorithm: " + alloc_algorithm);
+//        System.out.println("Allocation Algorithm: " + alloc_algorithm);
     }
 
     private void allocMemory(int binIndex, long blockSize, long pid) {
-        int next = (int)(binIndex + blockSize);
-        memory[next][0] = 0;
-        memory[next][1] = memory[binIndex][1] - blockSize;
-        memory[next][2] = blockSize;
+        if (Long.signum(memory[binIndex][1] - blockSize) > 0) {
+            int rightIndex = (int)(binIndex + memory[binIndex][1]);
+            int next = (int)(binIndex + blockSize);
+            memory[next][0] = 0;
+            memory[next][1] = memory[binIndex][1] - blockSize;
+            memory[next][2] = blockSize;
+            if (rightIndex < MEMORY_SIZE)
+                memory[rightIndex][2] = memory[next][1];
+        }
         memory[binIndex][0] = 1;
         memory[binIndex][1] = blockSize;
         pidMap.put(pid, binIndex);
-        System.out.println("memory[i][0]: " + memory[binIndex][0] + ", memory[i][1]: " + memory[binIndex][1] + ", next: " + next + ", memory[next][1]: " + memory[next][1] + ", memory[next][2]: " + memory[next][2]);
-        System.out.println("pidMap: " + "(" + pid + ", " + binIndex + ")");
+//        System.out.println("memory[i][0]: " + memory[binIndex][0] + ", memory[i][1]: " + memory[binIndex][1] + ", next: " + next + ", memory[next][1]: " + memory[next][1] + ", memory[next][2]: " + memory[next][2]);
+//        System.out.println("pidMap: " + "(" + pid + ", " + binIndex + ")");
     }
+
+//    private void printMemory(long[][] memory) { // For debugging
+//        for (int i = 0; i < MEMORY_SIZE; ++i) {
+//            if (!(memory[i][0] == 0 && memory[i][1] == 0 && memory[i][2] == 0))
+//                System.out.println(i + ", " + memory[i][0] + ", " + memory[i][1] + ", " + memory[i][2]);
+//        }
+//    }
 }

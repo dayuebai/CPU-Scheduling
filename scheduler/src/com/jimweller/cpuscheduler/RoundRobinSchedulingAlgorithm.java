@@ -48,7 +48,7 @@ public class RoundRobinSchedulingAlgorithm extends BaseSchedulingAlgorithm {
     public boolean removeJob(Process p) {
         // Fill in this method
         /*------------------------------------------------------------*/
-//        System.out.println("Job query remove jod pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
+//        System.out.println("Job query remove job pid: " + p.getPID() + ", cpu burst time: " + p.getBurstTime());
         if (p == activeJob) {
             lastJobIndex = jobs.indexOf(activeJob);
             activeJob = null;
